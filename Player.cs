@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TTT5.GameElements
+namespace TTT5
 {
     /// <summary>
     /// Represents one of the players in the game.

@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TTT5.GameElements;
 
 namespace TTT5
 {
     public class Game
     {
+        /// <summary>RNG used for AI turns.</summary>
+        public static readonly Random Random = new Random();
+
         /// <summary>The game's board.</summary>
         public Board<Player> Board { get; }
 
@@ -29,9 +31,6 @@ namespace TTT5
         public Dictionary<Player, int> Threes { get; } = new Dictionary<Player, int>();
 
 
-        private readonly Random random = new Random();
-
-
         public Game(Player startingPlayer = default)
         {
             Board = new Player[5, 5];
@@ -44,6 +43,13 @@ namespace TTT5
         }
         
 
+
+
+        /// <summary>Moves the pointer by a specified amount.</summary>
+        public void ShiftPointer(int x, int y)
+        {
+            Pointer = Board.Wrap(Pointer.Value + (x, y));
+        }
 
 
         /// <summary>Places a symbol on the board as the current player,
@@ -60,14 +66,14 @@ namespace TTT5
 
 
         /// <summary>Makes a decision for a position to place a symbol as the current player.</summary>
-        public Pos GetSymbolAI()
+        public Pos GetTurnAI()
         {
             if (Time == 25) return default;
 
             var moves = TryCompleteLines(Turn, 4) ?? TryCompleteLines(Turn.Opponent, 4) ?? // Win or avoid losing
                         TryCompleteFlyingLines(Turn) ?? TryCompleteFlyingLines(Turn.Opponent); // Forced win / forced lose situations
 
-            if (Time < 2 && Board[2, 2] == Player.None && random.Next(4) > 0) moves = new List<Pos> { (2, 2) };
+            if (Time < 2 && Board[2, 2] == Player.None && Random.Next(4) > 0) moves = new List<Pos> { (2, 2) };
 
             if (moves == null) // Lines of 3
             {
@@ -99,16 +105,7 @@ namespace TTT5
                 }
             }
 
-            return moves[random.Next(moves.Count)];
-        }
-
-
-        /// <summary>Automatically decides and places a symbol as the current player.</summary>
-        public Pos PlaceSymbolAI()
-        {
-            var choice = GetSymbolAI();
-            PlaceSymbol(choice);
-            return choice;
+            return moves[Random.Next(moves.Count)];
         }
 
 

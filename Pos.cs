@@ -1,17 +1,14 @@
 ﻿using System;
 
-namespace TTT5.GameElements
+namespace TTT5
 {
     /// <summary>
     /// A position in a <see cref="Board{T}"/>, expressed as x and y coordinates.
     /// </summary>
-    public struct Pos : IEquatable<Pos>
+    public readonly struct Pos : IEquatable<Pos>
     {
-        public static readonly Pos Origin = (0, 0);
-
-
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X { get; }
+        public int Y { get; }
 
         public Pos(int x, int y)
         {
@@ -39,8 +36,6 @@ namespace TTT5.GameElements
         public static Pos operator +(Pos pos1, Pos pos2) => new Pos(pos1.X + pos2.X, pos1.Y + pos2.Y);
 
         public static Pos operator -(Pos pos1, Pos pos2) => new Pos(pos1.X - pos2.X, pos1.Y - pos2.Y);
-
-        public static Pos operator +(Pos pos, Direction dir) => pos + dir.ToPos();
 
         public static Pos operator *(Pos pos, int mult) => new Pos(pos.X * mult, pos.Y * mult);
 

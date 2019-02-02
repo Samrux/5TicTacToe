@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using TTT5.GameElements;
 
 namespace TTT5
 {
     /// <summary>
-    /// Manages the drawing of all user interface elements of the game in the console.
+    /// Provides the drawing of all user interface elements of the game in the console.
     /// </summary>
     public static class Display
     {
         // Element positions in the console
         private static Pos Screen;
         private static Pos BorderStart => (1, 1);
-        private static Pos BorderEnd => Screen - (1, 2);
+        private static Pos BorderEnd   => Screen - (1, 2);
         private static Pos OrnamentStart => BorderStart + (2, 1);
-        private static Pos OrnamentEnd => BorderEnd - (2, 1);
-        private static Pos Grid => Screen/2 -  (9, 4);
-        private static Pos Logo => Screen/2 - (31, 6);
-        private static Pos Help => Screen/2 - (30, 4);
-        private static Pos Controls => Screen - (30, 15);
-        private static Pos ControlsSmall => Screen - (23, 7);
-        private static Pos Score => (6, 4);
+        private static Pos OrnamentEnd   => BorderEnd - (2, 1);
+        private static Pos Instructions  => Screen/2 - (30, 5);
+        private static Pos Title  => Screen/2 - (31, 6);
+        private static Pos Grid   => Screen/2 -  (9, 4);
+        private static Pos Score  => (6, 4);
         private static Pos Threes => (6, 12);
+        private static Pos HelpBox => Screen - (18, 8);
 
 
-        private static readonly string[] Title5 = new[]
+        private static readonly string[] TitleBig5 = new[]
         {
             "     ::::::::::",
             "    :+:    :+: ",
@@ -36,7 +34,7 @@ namespace TTT5
             "########       ",
         };
 
-        private static readonly string[] TitleT = new[]
+        private static readonly string[] TitleBigT = new[]
         {
             " ::::::::::::",
             "     :+:     ",
@@ -47,7 +45,7 @@ namespace TTT5
             "###          ",
         };
 
-        private static readonly string[] Instructions = new[]
+        private static readonly string[] InstructionsText =
         {
             "You play in a 5x5 board, Player 1 using X, player 2 using O.",
             "To win, you must make more lines of three symbols than your",
@@ -55,6 +53,8 @@ namespace TTT5
             "But be careful! If a player makes a line of four, they will",
             "win the game instantly. Don't lose focus.",
             "Use your wits and develop the best strategies!",
+            "", "",
+            "F1 = Instructions |  F5 = Reset Match |  F10 = Title Screen",
         };
 
 
@@ -116,13 +116,13 @@ namespace TTT5
 
 
         /// <summary>Draws a horizontal line composed of the given character.</summary>
-        public static void DrawHorizontal(Pos pos, int length, char value, ConsoleColor? color = null, ConsoleColor? background = null)
+        public static void DrawHorizontal(Pos pos, int length, char value = BoxChars.Horizontal, ConsoleColor? color = null, ConsoleColor? background = null)
         {
             Draw(pos, new string(value, length), color, background);
         }
 
         /// <summary>Draws a vertical line composed of the given value.</summary>
-        public static void DrawVertical(Pos pos, int length, object value, ConsoleColor? color = null, ConsoleColor? background = null)
+        public static void DrawVertical(Pos pos, int length, char value = BoxChars.Vertical, ConsoleColor? color = null, ConsoleColor? background = null)
         {
             for (int y = 0; y < length; y++) Draw(pos + (0, y), value, color, background);
         }
@@ -141,6 +141,7 @@ namespace TTT5
             {
                 Screen = (Console.WindowWidth, Console.WindowHeight);
                 Console.SetBufferSize(Screen.X, Screen.Y);
+
                 Console.Clear();
                 if (redrawBorders)
                 {
@@ -175,6 +176,7 @@ namespace TTT5
             DrawBoard(game);
             DrawTurn(game);
             DrawScores(scores);
+            DrawHelpBox();
         }
 
 
@@ -274,22 +276,41 @@ namespace TTT5
         }
 
 
+        /// <summary>Draws the score box with each player's score.</summary>
         public static void DrawScores(IDictionary<Player, int> scores)
         {
             Console.ForegroundColor = ConsoleColor.White;
 
             Draw(Score, BoxChars.RightDown);
-            DrawHorizontal(Score + (1, 0), 11, BoxChars.Horizontal);
+            DrawHorizontal(Score + (1, 0), 11);
             Draw(Score + (12, 0), BoxChars.LeftDown);
             Draw(Score + (3, 0), "<Score>");
-            Draw(Score + (0, 1), BoxChars.Vertical);
-            DrawVertical(Score + (0, 2), 3, $"{BoxChars.UpRightDown}{BoxChars.Horizontal}");
-            Draw(Score + (0, 5), BoxChars.Vertical);
+            DrawVertical(Score + (0, 1), 5);
+            DrawVertical(Score + (0, 2), 3, BoxChars.UpRightDown);
+            DrawVertical(Score + (1, 2), 3, BoxChars.Horizontal);
             Draw(Score + (0, 6), BoxChars.RightUp);
             for (var p = Player.One; p <= Player.Tie; p++)
             {
                 Draw(Score + (3, 1 + p), $"{p}: {scores[p].ToString().PadLeft(2)}", p.Color);
             }
+        }
+
+
+        /// <summary>Draws the help prompt in the corner of the game screen.</summary>
+        public static void DrawHelpBox()
+        {
+            Console.ForegroundColor = ConsoleColor.White;
+
+            Draw(HelpBox + (2, 1), "Press   ", ConsoleColor.Gray);
+            Draw(HelpBox + (8, 1), "F1");
+            Draw(HelpBox + (2, 2), "for help", ConsoleColor.Gray);
+
+            Console.ForegroundColor = ConsoleColor.White;
+            DrawHorizontal(HelpBox + (1, 0), 11);
+            Draw(HelpBox, BoxChars.RightDown);
+            DrawVertical(HelpBox + (11, 1), 3);
+            Draw(HelpBox + (11, 0), BoxChars.LeftDown);
+            Draw(HelpBox + (11, 3), BoxChars.LeftUp);
         }
 
 
@@ -390,28 +411,28 @@ namespace TTT5
 
             for (int i = 0; i < 7; i++)
             {
-                Draw(Logo + (0, i), Title5[i], Player.One.Color);
+                Draw(Title + (0, i), TitleBig5[i], Player.One.Color);
             }
-            Draw(Logo + (12, 4), "+#++:++#++:++", ConsoleColor.Gray);
+            Draw(Title + (12, 4), "+#++:++#++:++", ConsoleColor.Gray);
 
             for (int t = 0; t < 3; t++)
             {
                 var color = t % 2 == 0 ? Player.Two.Color : Player.One.Color;
                 for (int i = 0; i < 7; i++)
                 {
-                    Draw(Logo + (26 + 12 * t, i), TitleT[i], color);
+                    Draw(Title + (26 + 12 * t, i), TitleBigT[i], color);
                 }
             }
 
-            Draw(Screen.X/2 -  9, Logo.Y + 9, "<@ 5-Tic-Tac-Toe @>", ConsoleColor.White);
+            Draw(Screen.X/2 -  9, Title.Y + 9, "<@ 5-Tic-Tac-Toe @>", ConsoleColor.White);
 
             Draw(Screen.X/2 - 12, Screen.Y - 5, "Play vs AI");
             Draw(Screen.X/2 +  4, Screen.Y - 5, "Play 1vs1");
         }
 
 
-        /// <summary>Draws the 2-frame animation of the title screen.</summary>
-        public static void DrawTitleAnimation(bool choice, bool shift)
+        /// <summary>Draws the nimation of the title screen pointer.</summary>
+        public static void DrawTitlePointer(bool choice, bool shift)
         {
             Draw(Screen.X/2 - 15, Screen.Y - 5, choice ? shift ? " >>" : ">> " : "   ", Player.Tie.Color);
             Draw(Screen.X/2 - 2, Screen.Y - 5, choice ? shift ? "<< " : " <<" : "   ", Player.Tie.Color);
@@ -425,82 +446,23 @@ namespace TTT5
         public static void DrawInstructions()
         {
             ClearGame();
+            Console.ResetColor();
 
-            for (int i = 0; i < Instructions.Length; i++)
+            Draw(Screen.X/2 - 11, Instructions.Y - 3, "-<@  Instructions  @>-", Player.Tie.Color);
+            Draw(Screen.X/2 - 12, Screen.Y - 7, "{ Press Enter or Space }", ConsoleColor.Gray);
+
+            for (int i = 0; i < InstructionsText.Length; i++)
             {
-                Draw(Help + (0, i), Instructions[i]);
+                Draw(Instructions + (0, i), InstructionsText[i]);
             }
 
-            Draw(Help + (40, 0), Player.One.Symbol, Player.One.Color);
-            Draw(Help + (58, 0), Player.Two.Symbol, Player.Two.Color);
-            Draw(Help + (27, 1), "lines of three symbols", ConsoleColor.White);
-            Draw(Help + (44, 3), "four", ConsoleColor.White);
-
-            Draw(Screen.X / 2 - 10, Help.Y - 3, "-<@  Instructions  @>-", Player.Tie.Color);
-            Draw(Screen.X / 2 - 12, Screen.Y - 5, "{ Press any key to begin }", ConsoleColor.Gray);
+            Draw(Instructions + (40, 0), Player.One.Symbol, Player.One.Color);
+            Draw(Instructions + (58, 0), Player.Two.Symbol, Player.Two.Color);
+            Draw(Instructions + (27, 1), "lines of three symbols", ConsoleColor.White);
+            Draw(Instructions + (44, 3), "four", ConsoleColor.White);
+            Draw(Instructions + (0, InstructionsText.Length-1), "F1", Player.Tie.Color);
+            Draw(Instructions + (21, InstructionsText.Length-1), "F5", Player.Tie.Color);
+            Draw(Instructions + (41, InstructionsText.Length-1), "F10", Player.Tie.Color);
         }
     }
 }
-
-/*
-void Display::Controls(bool bigWindow, bool animation) {
-    utils::ClearScreen(CTRL, { CTRL.X+25, CTRL.Y+11 }, 1); // Clear controls box area
-
-    if (!bigWindow) {
-        setcolor(GRAY);
-        printxy(SCTR.X + 2, SCTR.Y + 1, "Press Backspace ");
-        printxy(SCTR.X + 2, SCTR.Y + 2, "to open controls");
-
-        setcolor(NORMAL);
-        for (int x = 1; x <= 18; x++) printxy(SCTR.X + x, SCTR.Y, HORIZONTAL_LINE);
-        printxy(SCTR.X, SCTR.Y, TOPLEFT_CORNER);
-        printxy(SCTR.X + 19, SCTR.Y, TOPRIGHT_CORNER);
-        printxy(SCTR.X + 19, SCTR.Y + 1, VERTICAL_LINE);
-        printxy(SCTR.X + 19, SCTR.Y + 2, VERTICAL_LINE);
-        printxy(SCTR.X + 19, SCTR.Y + 3, BOTTOMRIGHT_CORNER);
-
-    }
-    else {
-        setcolor(WHITE);
-        for (int x = 1; x <= 24; x++) printxy(CTRL.X + x, CTRL.Y, HORIZONTAL_LINE);
-        for (int y = 1; y <= 11; y++) printxy(CTRL.X + 25, CTRL.Y + y, VERTICAL_LINE);
-        printxy(CTRL.X, CTRL.Y, TOPLEFT_CORNER);
-        printxy(CTRL.X + 25, CTRL.Y, TOPRIGHT_CORNER);
-        printxy(SCTR.X + 19, CTRL.Y + 11, BOTTOMRIGHT_CORNER);
-        printxy(CTRL.X + 8, CTRL.Y, "<Controls>");
-
-        setcolor(GREEN);
-        printxy(CTRL.X + 2, CTRL.Y + 2, "< ^ v >");
-        printxy(CTRL.X + 2, CTRL.Y + 3, "Enter");
-        printxy(CTRL.X + 2, CTRL.Y + 5, "F1");
-        printxy(CTRL.X + 2, CTRL.Y + 6, "F5");
-        printxy(CTRL.X + 2, CTRL.Y + 7, "F10");
-        printxy(CTRL.X + 2, CTRL.Y + 9, "Backspace");
-
-        setcolor(NORMAL);
-        printxy(CTRL.X + 11, CTRL.Y + 2, "Move pointer ");
-        printxy(CTRL.X + 11, CTRL.Y + 3, "Place symbol ");
-        printxy(CTRL.X + 11, CTRL.Y + 5, "Instructions ");
-        printxy(CTRL.X + 11, CTRL.Y + 6, "Reset Match  ");
-        printxy(CTRL.X + 11, CTRL.Y + 7, "Restart all  ");
-        printxy(CTRL.X + 11, CTRL.Y + 9, " Close this  ");
-        printxy(CTRL.X + 11, CTRL.Y + 10," controls tab");
-
-        if (animation && !DEBUG) { // Bring attention to the controls
-            for (int i = 0; i < 2; i++) {
-                printxy(CTRL.X + 11, CTRL.Y - 3, "V V V", WHITE);
-                printxy(CTRL.X + 11, CTRL.Y - 2, "     ");
-                Wait(150);
-                printxy(CTRL.X + 11, CTRL.Y - 3, "     ");
-                printxy(CTRL.X + 11, CTRL.Y - 2, "V V V", WHITE);
-                Wait(150);
-            }
-
-            Wait(200);
-            printxy(CTRL.X + 11, CTRL.Y - 2, "     ");
-
-            CleanKbBuffer(); // Ignore any input during the animation
-        }
-    }
-}
-*/

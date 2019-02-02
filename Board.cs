@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace TTT5.GameElements
+namespace TTT5
 {
     /// <summary>
     /// Wrapper for a 2D array that introduces index looping, and allows access using <see cref="Pos"/> coordinates.
@@ -12,7 +12,7 @@ namespace TTT5.GameElements
     /// <typeparam name="T">The type of the values stored in the board.</typeparam>
     public class Board<T>
     {
-        [DataMember] protected readonly T[,] values;
+        protected readonly T[,] values;
 
 
         /// <summary>Number of elements in the board.</summary>
@@ -100,37 +100,22 @@ namespace TTT5.GameElements
         }
 
 
-        /// <summary>Replaces all the elements in the board using the specified value selector.</summary>
-        /// <param name="valueSelector">A delegate that returns the desired value at the given position.</param>
-        public Board<T> Fill(Func<Pos, T> valueSelector)
-        {
-            for (int x = 0; x < Width; x++)
-            {
-                for (int y = 0; y < Height; y++)
-                {
-                    values[x, y] = valueSelector((x, y));
-                }
-            }
-
-            return this;
-        }
-
-
         /// <summary>If the given position is outside the board, it will be adjusted to loop around to the other side. 
-        /// Positions already loop around when accessing an element in the board, though.</summary>
+        /// Positions automatically loop around when accessing an element in the board.</summary>
         public Pos Wrap(Pos pos)
         {
-            pos.X %= Width;
-            if (pos.X < 0) pos.X += Width;
+            int x = pos.X, y = pos.Y;
+            x %= Width;
+            if (pos.X < 0) x += Width;
 
-            pos.Y %= Height;
-            if (pos.Y < 0) pos.Y += Height;
+            y %= Height;
+            if (pos.Y < 0) y += Height;
 
-            return pos;
+            return (x, y);
         }
 
 
-        /// <summary>Builds and returns a string representing all the elements in the board.</summary>
+        /// <summary>Builds and returns a basic string that represents the elements in the board.</summary>
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -146,26 +131,7 @@ namespace TTT5.GameElements
 
             return sb.ToString();
         }
-
-
-        /// <summary>Builds and returns a string representing the board, 
-        /// composed of values obtained using the specified selector.</summary>
-        /// <param name="stringSelector">A delegate that takes a value in the board and returns its desired string representation.</param>
-        public string ToString(Func<T, string> stringSelector)
-        {
-            var sb = new StringBuilder();
-            for (int y = 0; y < Height; y++)
-            {
-                if (y > 0) sb.Append('\n');
-                for (int x = 0; x < Width; x++)
-                {
-                    sb.Append(stringSelector(values[x, y]));
-                }
-            }
-
-            return sb.ToString();
-        }
-
+        
 
         public override bool Equals(object obj) => obj is Board<T> board && values == board.values;
 
