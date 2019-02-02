@@ -140,7 +140,8 @@ namespace TTT5
             if (Screen != (Console.WindowWidth, Console.WindowHeight))
             {
                 Screen = (Console.WindowWidth, Console.WindowHeight);
-                Console.SetBufferSize(Screen.X, Screen.Y);
+                try { Console.SetBufferSize(Screen.X, Screen.Y); }
+                catch (PlatformNotSupportedException) { }
 
                 Console.Clear();
                 if (redrawBorders)
@@ -371,8 +372,8 @@ namespace TTT5
             }
             Draw(BorderEnd.X, BorderStart.Y, BoxChars.DoubleLeftDown);
 
-            Console.Beep(300, 50); // I think it takes a bit for them to play, so this ends up in sync
-            Console.Beep(400, 50);
+            Program.Beep(300, 50); // I think it takes a bit for them to play, so this ends up in sync
+            Program.Beep(400, 50);
             Thread.Sleep(50);
 
             for (int y = BorderStart.Y + 1; y < BorderEnd.Y; y++)
@@ -382,7 +383,7 @@ namespace TTT5
             }
             Draw(BorderEnd, BoxChars.DoubleUpLeft);
 
-            Console.Beep(500, 50);
+            Program.Beep(500, 50);
             Thread.Sleep(50);
 
             for (int x = BorderEnd.X - 1; x > BorderStart.X; x--)
@@ -392,7 +393,7 @@ namespace TTT5
             }
             Draw(BorderStart.X, BorderEnd.Y, BoxChars.DoubleUpRight);
 
-            Console.Beep(600, 50);
+            Program.Beep(600, 50);
             Thread.Sleep(50);
 
             for (int y = BorderEnd.Y - 1; y > BorderStart.Y; y--)

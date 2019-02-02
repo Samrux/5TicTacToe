@@ -49,7 +49,7 @@ namespace TTT5
                         Display.DrawCell(game, aiPos);
 
                         Thread.Sleep(100);
-                        Console.Beep(game.Turn.Tone, 50);
+                        Beep(game.Turn.Tone, 50);
                         Thread.Sleep(100);
 
                         game.PlaceSymbol(aiPos);
@@ -76,23 +76,23 @@ namespace TTT5
                                 break;
                             case ConsoleKey.Enter:
                             case ConsoleKey.Spacebar:
-                                Console.Beep(game.Turn.Tone, 50);
+                                Beep(game.Turn.Tone, 50);
                                 game.PlaceSymbol(game.Pointer.Value);
                                 Display.DrawTurn(game);
                                 break;
                             case ConsoleKey.F1:
-                                Console.Beep(600, 50);
+                                Beep(600, 50);
                                 OpenInstructions();
                                 Display.AdjustSize();
                                 Display.DrawMatch(game, scores);
                                 break;
                             case ConsoleKey.F5:
-                                Console.Beep(300, 250);
+                                Beep(300, 250);
                                 forceQuit = true;
                                 break;
                             case ConsoleKey.F10:
-                                Console.Beep(400, 50);
-                                Console.Beep(300, 500);
+                                Beep(400, 50);
+                                Beep(300, 500);
                                 forceQuit = true;
                                 scores = new Dictionary<Player, int>()
                                 {
@@ -130,13 +130,21 @@ namespace TTT5
 
                 Display.DrawGameOver(game, scores);
 
-                Console.Beep(400, 100);
-                Console.Beep(300, 100);
-                Console.Beep(500, 500);
+                Beep(400, 100);
+                Beep(300, 100);
+                Beep(500, 500);
 
                 ClearKeys();
                 Console.ReadKey(true);
             }
+        }
+
+
+        /// <summary>Safe beep sound.</summary>
+        public static void Beep(int frequency, int duration)
+        {
+            try { Console.Beep(frequency, duration); }
+            catch (PlatformNotSupportedException) { }
         }
 
 
@@ -173,7 +181,7 @@ namespace TTT5
                 }
             }
 
-            Console.Beep(choosingAI ? 500 : 400, 200);
+            Beep(choosingAI ? 500 : 400, 200);
 
             return choosingAI;
         }
@@ -191,7 +199,7 @@ namespace TTT5
             {
                 key = Console.ReadKey(true).Key;
             }
-            Console.Beep(600, 200);
+            Beep(600, 200);
         }
     }
 }
