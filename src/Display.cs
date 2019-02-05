@@ -5,11 +5,11 @@ using System.Threading;
 namespace TTT5
 {
     /// <summary>
-    /// Provides the drawing of all user interface elements of the game in the console.
+    /// Allows the printing of all user interface elements in the command line.
     /// </summary>
     public static class Display
     {
-        // Element positions in the console
+        // Element positions
         private static Pos Screen;
         private static Pos BorderStart => (1, 1);
         private static Pos BorderEnd   => Screen - (1, 2);
@@ -55,6 +55,31 @@ namespace TTT5
             "Use your wits and develop the best strategies!",
             "", "",
             "F1 = Instructions |  F5 = Reset Match |  F10 = Title Screen",
+        };
+
+        private static readonly string[] PlayerPointers =
+        {
+            "", "> <", "( )", null,
+        };
+
+        private static readonly string[] PlayerTurnTitles =
+        {
+            "", "+>> Player Red's turn <<+", "/(( Player Blu's turn ))\\", null,
+        };
+
+        private static readonly string[] PlayerWinTitles =
+        {
+            "", " <@+ Player Red won! +@> ", " ~@{ Player Blu won! }@~ ", "   -=] It's a tie! [=-   ",
+        };
+
+        private static readonly ConsoleColor[] PlayerColors =
+        {
+            ConsoleColor.Gray, ConsoleColor.Red, ConsoleColor.Cyan, ConsoleColor.Green,
+        };
+
+        private static readonly ConsoleColor[] PlayerBackgroundColors =
+        {
+            ConsoleColor.Black, ConsoleColor.DarkRed, ConsoleColor.DarkCyan, ConsoleColor.DarkGreen,
         };
 
 
@@ -171,10 +196,10 @@ namespace TTT5
 
 
         /// <summary>Draws the entire game screen.</summary>
-        public static void DrawMatch(Game game, IDictionary<Player, int> scores)
+        public static void DrawMatch(Game game, Pos? selectedCell, IDictionary<Player, int> scores)
         {
             ClearGame();
-            DrawBoard(game);
+            DrawBoard(game, selectedCell);
             DrawTurn(game);
             DrawScores(scores);
             DrawHelpBox();
@@ -205,10 +230,12 @@ namespace TTT5
             Draw(BorderStart.X, BorderEnd.Y, BoxChars.DoubleUpRight);
             Draw(BorderEnd, BoxChars.DoubleUpLeft);
             Draw(BorderEnd.X, BorderStart.Y, BoxChars.DoubleLeftDown);
-            DrawHorizontal(BorderStart + (1, 0), (BorderEnd-BorderStart).X-1, BoxChars.DoubleHorizontal);
-            DrawHorizontal((BorderStart.X+1, BorderEnd.Y), (BorderEnd-BorderStart).X-1, BoxChars.DoubleHorizontal);
-            DrawVertical(BorderStart + (0, 1), (BorderEnd - BorderStart).Y - 1, BoxChars.DoubleVertical);
-            DrawVertical((BorderEnd.X, BorderStart.Y+1), (BorderEnd - BorderStart).Y - 1, BoxChars.DoubleVertical);
+
+            DrawHorizontal(BorderStart + (1, 0),           (BorderEnd-BorderStart).X-1,     BoxChars.DoubleHorizontal);
+            DrawHorizontal((BorderStart.X+1, BorderEnd.Y), (BorderEnd-BorderStart).X-1,     BoxChars.DoubleHorizontal);
+
+            DrawVertical(BorderStart + (0, 1),             (BorderEnd - BorderStart).Y - 1, BoxChars.DoubleVertical);
+            DrawVertical((BorderEnd.X, BorderStart.Y+1),   (BorderEnd - BorderStart).Y - 1, BoxChars.DoubleVertical);
 
             Draw(Screen.X - 11, BorderEnd.Y, "By Samrux", ConsoleColor.Gray);
         }
@@ -222,11 +249,11 @@ namespace TTT5
         {
             for (int jx = 1; jx <= 4; jx++)
             {
-                DrawVertical(Grid + (4*jx - 2, 0), 9, BoxChars.Vertical);
+                DrawVertical(Grid + (4*jx - 2, 0), 9);
             }
             for (int jy = 1; jy < 5; jy++)
             {
-                DrawHorizontal(Grid + (-1, 2*jy - 1), 19, BoxChars.Horizontal);
+                DrawHorizontal(Grid + (-1, 2*jy - 1), 19);
             }
             for (int jy = 1; jy < 5; jy++)
             {
@@ -238,42 +265,48 @@ namespace TTT5
         }
 
 
-        /// <summary>Draws a cell of the board, and the pointer if it's selecting the cell.</summary>
-        public static void DrawCell(Game game, Pos pos)
+        /// <summary>Draws a cell of the board.</summary>
+        public static void DrawCell(Game game, Pos pos, bool selected = false)
         {
             var cell = game.Board[pos];
 
-            if (pos == game.Pointer)
+            if (selected)
             {
-                Draw(Grid + (4*pos.X - 1, 2*pos.Y), game.Turn.Pointer, ConsoleColor.White);
+                Draw(Grid + (4*pos.X - 1, 2*pos.Y), PlayerPointers[game.Turn], ConsoleColor.White);
 
                 var symbol = cell == Player.None ? '_' : cell.Symbol;
-                var color = cell == Player.None ? game.Turn.Color : cell.Color;
+                var color = cell == Player.None ? PlayerColors[game.Turn] : PlayerColors[cell];
                 Draw(Grid + (4*pos.X, 2*pos.Y), symbol, color);
             }
             else
             {
-                Draw(Grid + (4*pos.X - 1, 2*pos.Y), $" {cell.Symbol} ", cell.Color, game.Highlight[pos].BgColor);
+                Draw(Grid + (4*pos.X - 1, 2*pos.Y), $" {cell.Symbol} ",
+                    PlayerColors[cell], PlayerBackgroundColors[game.Highlights[pos]]);
             }
         }
 
 
         /// <summary>Draws the entire game board.</summary>
-        public static void DrawBoard(Game game)
+        public static void DrawBoard(Game game, Pos? selectedCell)
         {
             DrawGrid();
 
             for (int y = 0; y < 5; y++)
+            {
                 for (int x = 0; x < 5; x++)
-                    DrawCell(game, (x, y));
+                {
+                    Pos pos = (x, y);
+                    DrawCell(game, pos, pos == selectedCell);
+                }
+            }
         }
 
 
         /// <summary>Draws the elements of the current player's turn.</summary>
         public static void DrawTurn(Game game)
         {
-            Draw(Grid - (4, 4), game.Turn.TurnTitle, game.Turn.Color);
-            DrawOrnaments(game.Turn.Color);
+            Draw(Grid - (4, 4), PlayerTurnTitles[game.Turn], PlayerColors[game.Turn]);
+            DrawOrnaments(PlayerColors[game.Turn]);
         }
 
 
@@ -290,9 +323,9 @@ namespace TTT5
             DrawVertical(Score + (0, 2), 3, BoxChars.UpRightDown);
             DrawVertical(Score + (1, 2), 3, BoxChars.Horizontal);
             Draw(Score + (0, 6), BoxChars.RightUp);
-            for (var p = Player.One; p <= Player.Tie; p++)
+            foreach (var p in new[] { Player.One, Player.Two, Player.Tie })
             {
-                Draw(Score + (3, 1 + p), $"{p}: {scores[p].ToString().PadLeft(2)}", p.Color);
+                Draw(Score + (3, 1 + p), $"{p}: {scores[p].ToString().PadLeft(2)}", PlayerColors[p]);
             }
         }
 
@@ -319,18 +352,20 @@ namespace TTT5
         public static void DrawGameOver(Game game, IDictionary<Player, int> scores)
         {
             DrawScores(scores);
-            DrawBoard(game);
+            DrawBoard(game, null);
 
-            Console.ForegroundColor = game.Winner.Color;
-            Draw(Grid - (4, 4), game.Winner.WinTitle);
-            Draw(Grid + (-4, 11), game.Winner.WinTitle);
+            Console.ForegroundColor = PlayerColors[game.Winner];
+            Draw(Grid - (4, 4), PlayerWinTitles[game.Winner]);
+            Draw(Grid + (-4, 11), PlayerWinTitles[game.Winner]);
 
             // Extended corners
             DrawOrnaments();
+
             DrawHorizontal((OrnamentStart.X+1, OrnamentStart.Y), 8, BoxChars.Horizontal);
             DrawHorizontal((OrnamentStart.X+1, OrnamentEnd.Y),   8, BoxChars.Horizontal);
             DrawHorizontal((OrnamentEnd.X-8,   OrnamentStart.Y), 8, BoxChars.Horizontal);
             DrawHorizontal((OrnamentEnd.X-8,   OrnamentEnd.Y),   8, BoxChars.Horizontal);
+
             DrawVertical((OrnamentStart.X, OrnamentStart.Y+1), 4, BoxChars.Vertical);
             DrawVertical((OrnamentEnd.X,   OrnamentStart.Y+1), 4, BoxChars.Vertical);
             DrawVertical((OrnamentStart.X, OrnamentEnd.Y-4),   4, BoxChars.Vertical);
@@ -350,8 +385,8 @@ namespace TTT5
                 Draw(Threes + (0, 4), BoxChars.UpRightDown);
                 Draw(Threes + (0, 6), BoxChars.RightUp);
                 Draw(Threes + (7, 3), '/');
-                Draw(Threes + (4, 2),  game.Threes[Player.One], Player.One.Color);
-                Draw(Threes + (10, 4), game.Threes[Player.Two], Player.Two.Color);
+                Draw(Threes + (4, 2),  game.Threes[Player.One], PlayerColors[Player.One]);
+                Draw(Threes + (10, 4), game.Threes[Player.Two], PlayerColors[Player.Two]);
             }
         }
 
@@ -412,13 +447,13 @@ namespace TTT5
 
             for (int i = 0; i < 7; i++)
             {
-                Draw(Title + (0, i), TitleBig5[i], Player.One.Color);
+                Draw(Title + (0, i), TitleBig5[i], PlayerColors[Player.One]);
             }
             Draw(Title + (12, 4), "+#++:++#++:++", ConsoleColor.Gray);
 
             for (int t = 0; t < 3; t++)
             {
-                var color = t % 2 == 0 ? Player.Two.Color : Player.One.Color;
+                var color = PlayerColors[t % 2 == 0 ? Player.Two : Player.One];
                 for (int i = 0; i < 7; i++)
                 {
                     Draw(Title + (26 + 12 * t, i), TitleBigT[i], color);
@@ -435,11 +470,13 @@ namespace TTT5
         /// <summary>Draws the nimation of the title screen pointer.</summary>
         public static void DrawTitlePointer(bool choice, bool shift)
         {
-            Draw(Screen.X/2 - 15, Screen.Y - 5, choice ? shift ? " >>" : ">> " : "   ", Player.Tie.Color);
-            Draw(Screen.X/2 - 2, Screen.Y - 5, choice ? shift ? "<< " : " <<" : "   ", Player.Tie.Color);
+            Console.ForegroundColor = PlayerColors[Player.Tie];
 
-            Draw(Screen.X/2 + 1, Screen.Y - 5, choice ? "   " : shift ? " >>" : ">> ", Player.Tie.Color);
-            Draw(Screen.X/2 + 13, Screen.Y - 5, choice ? "   " : shift ? "<< " : " <<", Player.Tie.Color);
+            Draw(Screen.X/2 - 15, Screen.Y - 5, choice ? shift ? " >>" : ">> " : "   ");
+            Draw(Screen.X/2 - 2, Screen.Y - 5, choice ? shift ? "<< " : " <<" : "   ");
+
+            Draw(Screen.X/2 + 1, Screen.Y - 5, choice ? "   " : shift ? " >>" : ">> ");
+            Draw(Screen.X/2 + 13, Screen.Y - 5, choice ? "   " : shift ? "<< " : " <<");
         }
 
 
@@ -449,7 +486,7 @@ namespace TTT5
             ClearGame();
             Console.ResetColor();
 
-            Draw(Screen.X/2 - 11, Instructions.Y - 3, "-<@  Instructions  @>-", Player.Tie.Color);
+            Draw(Screen.X/2 - 11, Instructions.Y - 3, "-<@  Instructions  @>-", PlayerColors[Player.Tie]);
             Draw(Screen.X/2 - 12, Screen.Y - 7, "{ Press Enter or Space }", ConsoleColor.Gray);
 
             for (int i = 0; i < InstructionsText.Length; i++)
@@ -457,13 +494,13 @@ namespace TTT5
                 Draw(Instructions + (0, i), InstructionsText[i]);
             }
 
-            Draw(Instructions + (40, 0), Player.One.Symbol, Player.One.Color);
-            Draw(Instructions + (58, 0), Player.Two.Symbol, Player.Two.Color);
+            Draw(Instructions + (40, 0), Player.One.Symbol, PlayerColors[Player.One]);
+            Draw(Instructions + (58, 0), Player.Two.Symbol, PlayerColors[Player.Two]);
             Draw(Instructions + (27, 1), "lines of three symbols", ConsoleColor.White);
             Draw(Instructions + (44, 3), "four", ConsoleColor.White);
-            Draw(Instructions + (0, InstructionsText.Length-1), "F1", Player.Tie.Color);
-            Draw(Instructions + (21, InstructionsText.Length-1), "F5", Player.Tie.Color);
-            Draw(Instructions + (41, InstructionsText.Length-1), "F10", Player.Tie.Color);
+            Draw(Instructions + (0,  InstructionsText.Length-1), "F1",  PlayerColors[Player.Tie]);
+            Draw(Instructions + (21, InstructionsText.Length-1), "F5",  PlayerColors[Player.Tie]);
+            Draw(Instructions + (41, InstructionsText.Length-1), "F10", PlayerColors[Player.Tie]);
         }
     }
 }

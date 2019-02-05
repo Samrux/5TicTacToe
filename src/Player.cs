@@ -24,24 +24,6 @@ namespace TTT5
         /// <summary>Returns this player's Tic-Tac-Toe symbol.</summary>
         public char Symbol => Symbols[value];
 
-        /// <summary>Returns this player's pointer appearance used to choose a cell.</summary>
-        public string Pointer => Pointers[value];
-
-        /// <summary>Returns the appearance of the turn title for this player.</summary>
-        public string TurnTitle => TurnTitles[value];
-
-        /// <summary>Returns the appearance of the win screen title for this player.</summary>
-        public string WinTitle => WinTitles[value];
-
-        /// <summary>Returns the color that represents this player.</summary>
-        public ConsoleColor Color => Colors[value];
-
-        /// <summary>Returns the background color that represents this player.</summary>
-        public ConsoleColor BgColor => BgColors[value];
-
-        /// <summary>Returns the console beep tone for this player.</summary>
-        public int Tone => Tones[value];
-
         /// <summary>The name of this player.</summary>
         public override string ToString() => Names[value];
 
@@ -74,39 +56,9 @@ namespace TTT5
             ' ', 'X', 'O', ' ',
         };
 
-        private static readonly string[] Pointers =
-        {
-            "", "> <", "( )", null,
-        };
-
-        private static readonly string[] TurnTitles =
-        {
-            "", "+>> Player Red's turn <<+", "/(( Player Blu's turn ))\\", null,
-        };
-
-        private static readonly string[] WinTitles =
-        {
-            "", " <@+ Player Red won! +@> ", " ~@{ Player Blu won! }@~ ", "   -=] It's a tie! [=-   ",
-        };
-
         private static readonly string[] Names =
         {
             "None", "Red", "Blu", "Tie",
-        };
-
-        private static readonly ConsoleColor[] Colors =
-        {
-            ConsoleColor.Gray, ConsoleColor.Red, ConsoleColor.Cyan, ConsoleColor.Green,
-        };
-
-        private static readonly ConsoleColor[] BgColors =
-        {
-            ConsoleColor.Black, ConsoleColor.DarkRed, ConsoleColor.DarkCyan, ConsoleColor.DarkGreen,
-        };
-
-        private static readonly int[] Tones =
-        {
-            100, 500, 400, 200,
         };
     }
 }

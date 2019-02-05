@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace TTT5
 {
     /// <summary>
-    /// Console tilities exclusive to Windows systems.
+    /// Console utilities exclusive to Windows systems.
     /// </summary>
     public static class WinUtil
     {

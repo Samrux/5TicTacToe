@@ -4,6 +4,9 @@ using System.Threading;
 
 namespace TTT5
 {
+    /// <summary>
+    /// Contains the main logic of the program.
+    /// </summary>
     public static class Program
     {
         /// <summary>Entry point of the program.</summary>
@@ -18,7 +21,7 @@ namespace TTT5
             Display.DrawBorders();
             Display.DrawOrnaments();
 
-            bool ai = OpenTitle();
+            bool vsAI = OpenTitle();
             OpenInstructions();
 
 
@@ -33,27 +36,30 @@ namespace TTT5
             while (true) // Program loop
             {
                 var game = new Game(next);
+                var ai = vsAI ? new GameAI(game) : null;
+                Pos selectedCell = new Pos(2, 2);
                 bool forceQuit = false;
+
                 Display.AdjustSize();
-                Display.DrawMatch(game, scores);
+                Display.DrawMatch(game, selectedCell, scores);
 
                 while (game.Winner == Player.None) // Game loop
                 {
-                    var oldPointer = game.Pointer.Value;
+                    var oldSelection = selectedCell;
 
-                    if (ai && game.Turn == Player.Two)
+                    if (ai != null && game.Turn == Player.Two)
                     {
-                        var aiPos = game.GetTurnAI();
-                        game.Pointer = aiPos;
-                        Display.DrawCell(game, oldPointer);
-                        Display.DrawCell(game, aiPos);
+                        var aiSelection = ai.GetNextPosition();
+                        selectedCell = aiSelection;
+                        Display.DrawCell(game, oldSelection);
+                        Display.DrawCell(game, aiSelection, true);
 
                         Thread.Sleep(100);
-                        Beep(game.Turn.Tone, 50);
+                        Beep(game.Turn);
                         Thread.Sleep(100);
 
-                        game.PlaceSymbol(aiPos);
-                        Display.DrawCell(game, aiPos);
+                        game.DoTurn(aiSelection);
+                        Display.DrawCell(game, aiSelection, true);
                         Display.DrawTurn(game);
                     }
                     else
@@ -63,28 +69,31 @@ namespace TTT5
                         switch (Console.ReadKey(true).Key)
                         {
                             case ConsoleKey.LeftArrow:
-                                game.ShiftPointer(-1, 0);
+                                selectedCell += (-1, 0);
                                 break;
                             case ConsoleKey.UpArrow:
-                                game.ShiftPointer(0, -1);
+                                selectedCell += (0, -1);
                                 break;
                             case ConsoleKey.RightArrow:
-                                game.ShiftPointer(1, 0);
+                                selectedCell += (1, 0);
                                 break;
                             case ConsoleKey.DownArrow:
-                                game.ShiftPointer(0, 1);
+                                selectedCell += (0, 1);
                                 break;
                             case ConsoleKey.Enter:
                             case ConsoleKey.Spacebar:
-                                Beep(game.Turn.Tone, 50);
-                                game.PlaceSymbol(game.Pointer.Value);
-                                Display.DrawTurn(game);
+                                if (game.Board[selectedCell] == Player.None)
+                                {
+                                    Beep(game.Turn);
+                                    game.DoTurn(selectedCell);
+                                    Display.DrawTurn(game);
+                                }
                                 break;
                             case ConsoleKey.F1:
                                 Beep(600, 50);
                                 OpenInstructions();
                                 Display.AdjustSize();
-                                Display.DrawMatch(game, scores);
+                                Display.DrawMatch(game, selectedCell, scores);
                                 break;
                             case ConsoleKey.F5:
                                 Beep(300, 250);
@@ -100,28 +109,29 @@ namespace TTT5
                                     { Player.Two, 0 },
                                     { Player.Tie, 0 },
                                 };
-                                ai = OpenTitle();
+                                vsAI = OpenTitle();
                                 break;
 
                         }
 
                         if (forceQuit) break;
 
+                        selectedCell = game.Board.Wrap(selectedCell);
+
                         if (Display.AdjustSize())
                         {
-                            Display.DrawMatch(game, scores);
+                            Display.DrawMatch(game, selectedCell, scores);
                         }
                         else
                         {
-                            Display.DrawCell(game, game.Pointer.Value);
-                            Display.DrawCell(game, oldPointer);
+                            Display.DrawCell(game, oldSelection);
+                            Display.DrawCell(game, selectedCell, true);
                         }
                     }
                 }
 
                 if (forceQuit) continue;
 
-                game.Pointer = null;
                 scores[game.Winner]++;
 
                 if (game.Winner == Player.None) break;
@@ -140,11 +150,17 @@ namespace TTT5
         }
 
 
-        /// <summary>Safe beep sound.</summary>
+        /// <summary>Plays a console beep sound if possible.</summary>
         public static void Beep(int frequency, int duration)
         {
             try { Console.Beep(frequency, duration); }
             catch (PlatformNotSupportedException) { }
+        }
+
+        /// <summary>Plays a player's beep sound if possible.</summary>
+        public static void Beep(Player player)
+        {
+            Beep(player == Player.One ? 500 : player == Player.Two ? 400 : 200, 50);
         }
 
 
@@ -155,7 +171,7 @@ namespace TTT5
         }
 
 
-        /// <summary>Open the title screen.</summary>
+        /// <summary>Opens the title screen.</summary>
         public static bool OpenTitle()
         {
             Display.DrawTitleScreen();
